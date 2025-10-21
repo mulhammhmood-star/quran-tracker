@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>متتبع حفظ القرآن — نسخة كاملة تعمل مباشرة</title>
+<style>
+:root{
+  --bg:#f8fafc;--card:#ffffff;--text:#0f172a;--muted:#64748b;--primary:#16a34a;
+  --danger:#ef4444;--warn:#f59e0b;--border:#e2e8f0;--green-50:#e8f5e9;--red-50:#fee2e2;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+  font-family:"Tajawal",system-ui,-apple-system,Segoe UI,Roboto,"Noto Naskh Arabic",Arial,sans-serif}
+.container{max-width:1100px;margin:0 auto;padding:16px 16px 40px}
+h1{margin:0 0 6px;font-size:26px}
+.sub{color:var(--muted);font-size:14px;margin:0 0 16px}
+.grid{display:grid;gap:12px}
+.kpis{grid-template-columns:repeat(4,1fr)}
+@media (max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:520px){.kpis{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;box-shadow:0 2px 8px rgba(2,6,23,.04)}
+.card h3{margin:0 0 8px;font-size:16px}
+.kpi-val{font-size:24px;font-weight:700}
+.small{font-size:12px;color:var(--muted)}
+.progress{width:100%;height:8px;background:#e5e7eb;border-radius:999px;overflow:hidden}
+.progress > span{display:block;height:100%;background:var(--primary)}
+.row{display:grid;gap:12px;grid-template-columns:repeat(8,1fr);align-items:end}
+@media (max-width:900px){.row{grid-template-columns:1fr 1fr}}
+label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
+input,select,textarea,button{font:inherit;border:1px solid var(--border);border-radius:10px;padding:10px;background:#fff;color:var(--text)}
+input[type=date]{padding:8px 10px}
+button{cursor:pointer}
+.btn{padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:#fff}
+.btn-primary{background:var(--primary);border-color:var(--primary);color:#fff}
+.btn-danger{background:var(--danger);border-color:var(--danger);color:#fff}
+.btn-ghost{background:transparent}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#fff}
+thead th{background:#f1f5f9;font-weight:700;font-size:13px;color:#334155;padding:10px 8px;border-bottom:1px solid var(--border);text-align:right}
+tbody td{padding:10px 8px;border-bottom:1px solid var(--border);vertical-align:middle;text-align:right}
+tbody tr:last-child td{border-bottom:none}
+.badge{display:inline-block;padding:.2rem .5rem;border-radius:999px;font-size:12px;border:1px solid var(--border)}
+.badge-outline{background:#fff}
+.badge-sec{background:#f8fafc}
+.badge-new{background:#e8f5e9;color:#065f46;border-color:#10b981}
+.status-ok{color:#065f46}.status-late{color:#b91c1c}.status-early{color:#065f46}
+.row-warn{background:var(--red-50)}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:end}
+hr{border:none;border-top:1px dashed var(--border);margin:12px 0}
+.footer{color:var(--muted);font-size:12px;text-align:center;margin-top:24px}
+.section-title{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.notice{padding:10px;border-radius:10px;background:#ecfeff;border:1px solid #a5f3fc;color:#0e7490;font-size:13px}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>متتبع حفظ القرآن — نسخة كاملة تعمل مباشرة</h1>
+    <p class="sub">سَبَق – سَبقي – مَنزِل • تذكيرات محليّة • تصدير/استيراد CSV/JSON • تصدير/استيراد ICS • اقتراح أوقات فراغ</p>
+    <div class="notice">
+      تعمل هذه الصفحة كملف واحد فقط — افتحها في أي متصفح حديث. إشعارات التذكير محليّة وتعمل عندما تكون الصفحة مفتوحة.
+      لأفضل إشعارات على iPhone: استخدم زر <b>تصدير أحداث (ICS)</b> وأضفها إلى تقويم Apple.
+    </div>
+  </header>
+
+  <!-- KPIs -->
+  <section class="grid kpis">
+    <div class="card">
+      <h3>مكتمل جديد (تراكمي)</h3>
+      <div class="kpi-val" id="kpiNewDone">0</div>
+      <div class="small">صفحة من أصل <span id="kpiTotalPages">604</span></div>
+      <div class="progress" style="margin-top:8px"><span id="kpiProgress" style="width:0%"></span></div>
+    </div>
+    <div class="card">
+      <h3>المتبقّي إلى الختم</h3>
+      <div class="kpi-val" id="kpiLeft">604</div>
+      <div class="small">صفحة</div>
+    </div>
+    <div class="card">
+      <h3>على المسار (آخر 7 أيام)</h3>
+      <div class="kpi-val"><span id="kpiOnTrack">0</span>%</div>
+      <div class="small">جلسات ذات هدف بلا نقص</div>
+    </div>
+    <div class="card">
+      <h3>إجمالي النقص (كلي/للفترة)</h3>
+      <div class="kpi-val" id="kpiDeficit">0</div>
+      <div class="small">صفحة</div>
+    </div>
+  </section>
+
+  <!-- Settings -->
+  <section class="card" style="margin-top:12px">
+    <div class="section-title"><h3>الإعدادات والتذكيرات</h3></div>
+    <div class="row">
+      <div>
+        <label>إجمالي الصفحات المستهدفة</label>
+        <input type="number" id="totalPages" value="604">
+      </div>
+      <div>
+        <label>وقت سَبَق</label>
+        <input type="time" id="tPrev" value="05:30">
+      </div>
+      <div>
+        <label>وقت سَبقي</label>
+        <input type="time" id="tSabqi" value="16:30">
+      </div>
+      <div>
+        <label>وقت مَنزِل</label>
+        <input type="time" id="tManzil" value="20:30">
+      </div>
+      <div>
+        <label>تنبيه قبل الموعد (دقيقة)</label>
+        <input type="number" id="leadMins" value="10">
+      </div>
+      <div style="display:flex;gap:8px;align-items:end">
+        <button class="btn" id="btnAskNotif">سماح بالإشعارات</button>
+        <button class="btn" id="btnTestNotif">اختبار إشعار</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Add -->
+  <section class="card" style="margin-top:12px">
+    <div class="section-title">
+      <h3>إضافة جلسة سريعة</h3>
+      <span class="small">أدخل بعد كل جلسة</span>
+    </div>
+    <div class="row">
+      <div>
+        <label>التاريخ</label>
+        <input type="date" id="inpDate">
+      </div>
+      <div>
+        <label>الفترة</label>
+        <select id="inpPeriod">
+          <option>بعد الفجر</option>
+          <option>بين المحاضرات</option>
+          <option>بعد العشاء</option>
+          <option>مرن</option>
+        </select>
+      </div>
+      <div>
+        <label>المهمة</label>
+        <select id="inpTask">
+          <option>سَبَق</option>
+          <option>سَبقي</option>
+          <option>مَنزِل</option>
+        </select>
+      </div>
+      <div>
+        <label>الهدف (صفحات)</label>
+        <input type="number" id="inpGoal" value="2">
+      </div>
+      <div>
+        <label>المنفّذ (صفحات)</label>
+        <input type="number" id="inpActual" value="2">
+      </div>
+      <div>
+        <label>نطاق الصفحات (اختياري)</label>
+        <input id="inpRange" placeholder="مثال: 120–122 أو البقرة 1–20">
+      </div>
+      <div style="grid-column:1/-1">
+        <label>ملاحظات</label>
+        <input id="inpNotes" placeholder="ملاحظة/موضع توقف…">
+      </div>
+      <div style="grid-column:1/-1;display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn-primary" id="btnAdd">إضافة</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Table + IO -->
+  <section class="card" style="margin-top:12px">
+    <div class="section-title">
+      <h3>سجلات الجلسات</h3>
+      <div class="toolbar">
+        <button class="btn" id="btnExportJSON">تصدير JSON</button>
+        <button class="btn" id="btnExportCSV">تصدير CSV</button>
+        <button class="btn" id="btnExportICS">تصدير أحداث (ICS)</button>
+        <label class="btn" for="fileImport" style="cursor:pointer">استيراد JSON</label>
+        <input id="fileImport" type="file" accept="application/json" style="display:none">
+        <button class="btn btn-danger" id="btnReset">إعادة ضبط</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table id="tbl">
+        <thead>
+          <tr>
+            <th>التاريخ</th>
+            <th>الفترة</th>
+            <th>المهمة</th>
+            <th>الهدف</th>
+            <th>المنفّذ</th>
+            <th>النقص</th>
+            <th>النطاق</th>
+            <th>ملاحظات</th>
+            <th>إجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Apple Calendar -->
+  <section class="card" style="margin-top:12px">
+    <div class="section-title">
+      <h3>تقويم Apple (ICS): اقتراح أوقات فراغ</h3>
+    </div>
+    <div class="row">
+      <div style="grid-column:1/-1" class="small">للعثور على أوقات فراغ للحفظ: من Apple Calendar أو iCloud قم بتصدير تقويمك بصيغة <b>.ics</b> ثم ارفعه هنا لتحليل الفراغات.</div>
+      <div>
+        <label>ملف تقويم (ICS)</label>
+        <input type="file" id="icsInput" accept=".ics,text/calendar">
+      </div>
+      <div>
+        <label>الحد الأدنى لمدة الجلسة (دقيقة)</label>
+        <input type="number" id="minSlot" value="25">
+      </div>
+      <div style="grid-column:1/-1;display:flex;gap:8px;align-items:end">
+        <button class="btn" id="btnFindSlots">اقتراح أوقات فراغ لليوم/الأسبوع</button>
+      </div>
+    </div>
+    <div id="slotsWrap" style="margin-top:10px"></div>
+  </section>
+
+  <p class="footer">© تعمل محليًا — لا يتم رفع أي بيانات. للحصول على إشعارات موثوقة على iPhone: أضف أحداث ICS إلى تقويم Apple.</p>
+</div>
+
+<script>
+// ---------- State ----------
+const LS_KEY = "quran-tracker-full-standalone-v1";
+const MOTIVATION = [
+  "خطوة اليوم تصنع حفظ الغد — توكل على الله ✨",
+  "تَثبيت الصفحة أهم من كثرتها — إتقان ثم زيادة 💪",
+  "القرآن ربيع قلبك — صفحة الآن خير من عشر مؤجلة 🌱",
+  "لا تكسر السلسلة — ✔ سَبَق / ✔ سَبقي / ✔ مَنزِل",
+  "أَحسن مع الله يُحسن الله إليك — واثبت!"
+];
+const state = { settings:{ totalPages:604, times:{prev:"05:30", sabqi:"16:30", manzil:"20:30"}, lead:10 }, sessions:[] };
+
+function todayISO(){ const d=new Date(); const o=d.getTimezoneOffset(); return new Date(d.getTime()-o*60000).toISOString().slice(0,10); }
+function save(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+function load(){ try{ const raw=localStorage.getItem(LS_KEY); if(raw){ const d=JSON.parse(raw); if(d.settings) state.settings = Object.assign(state.settings, d.settings); if(Array.isArray(d.sessions)) state.sessions = d.sessions; } }catch{} }
+function makeId(){ return Math.random().toString(36).slice(2)+Date.now().toString(36); }
+
+// ---------- UI refs ----------
+const kpiNewDone = document.getElementById('kpiNewDone');
+const kpiTotalPages = document.getElementById('kpiTotalPages');
+const kpiLeft = document.getElementById('kpiLeft');
+const kpiOnTrack = document.getElementById('kpiOnTrack');
+const kpiDeficit = document.getElementById('kpiDeficit');
+const kpiProgress = document.getElementById('kpiProgress');
+
+const totalPages = document.getElementById('totalPages');
+const tPrev = document.getElementById('tPrev'); const tSabqi = document.getElementById('tSabqi'); const tManzil = document.getElementById('tManzil');
+const leadMins = document.getElementById('leadMins');
+const btnAskNotif = document.getElementById('btnAskNotif'); const btnTestNotif = document.getElementById('btnTestNotif');
+
+const inpDate = document.getElementById('inpDate'); const inpPeriod = document.getElementById('inpPeriod'); const inpTask = document.getElementById('inpTask');
+const inpGoal = document.getElementById('inpGoal'); const inpActual = document.getElementById('inpActual'); const inpRange = document.getElementById('inpRange'); const inpNotes = document.getElementById('inpNotes');
+const btnAdd = document.getElementById('btnAdd');
+
+const tbody = document.getElementById('tbody'); const fileImport = document.getElementById('fileImport');
+const btnExportJSON = document.getElementById('btnExportJSON'); const btnExportCSV = document.getElementById('btnExportCSV'); const btnExportICS = document.getElementById('btnExportICS');
+const btnReset = document.getElementById('btnReset');
+
+const icsInput = document.getElementById('icsInput'); const minSlot = document.getElementById('minSlot'); const btnFindSlots = document.getElementById('btnFindSlots'); const slotsWrap = document.getElementById('slotsWrap');
+
+// ---------- totals ----------
+function computeTotals(){
+  const arr = state.sessions.slice().sort((a,b)=> a.date.localeCompare(b.date));
+  const newDone = arr.filter(s=> s.task==='سَبَق').reduce((sum,s)=> sum + (+s.actual||0), 0);
+  const allDeficit = arr.reduce((sum,s)=> sum + Math.max((+s.goal||0) - (+s.actual||0), 0), 0);
+  const min7 = new Date(Date.now()-7*864e5).toISOString().slice(0,10);
+  const last7 = arr.filter(s=> s.date >= min7);
+  const withGoal = last7.filter(s=> (+s.goal||0)>0);
+  const onTrack = withGoal.filter(s=> Math.max((+s.goal||0) - (+s.actual||0),0)===0);
+  const pagesLeft = Math.max((+state.settings.totalPages||604) - newDone, 0);
+  const perc = Math.min(100, Math.round((newDone/(+state.settings.totalPages||604))*100));
+  return { newDone, allDeficit, last7Perc: withGoal.length? Math.round(onTrack.length/withGoal.length*100):0, pagesLeft, perc };
+}
+function renderKPIs(){
+  kpiTotalPages.textContent = (+state.settings.totalPages||604);
+  const t = computeTotals();
+  kpiNewDone.textContent = t.newDone; kpiLeft.textContent = t.pagesLeft; kpiOnTrack.textContent = t.last7Perc; kpiDeficit.textContent = t.allDeficit;
+  kpiProgress.style.width = t.perc + '%';
+}
+function rowToTr(row){
+  const tr = document.createElement('tr');
+  const deficit = Math.max((+row.goal||0)-(+row.actual||0),0);
+  if(deficit>0) tr.classList.add('row-warn');
+  tr.innerHTML = `
+    <td>${row.date}</td>
+    <td>${row.period||'—'}</td>
+    <td><span class="badge ${row.task==='سَبَق'?'badge-new':row.task==='سَبقي'?'badge-sec':'badge-outline'}">${row.task}</span></td>
+    <td>${row.goal??0}</td>
+    <td>${row.actual??0}</td>
+    <td>${deficit>0?`<span class="status-late">${deficit}</span>`:`<span class="status-ok">0</span>`}</td>
+    <td>${row.range||'—'}</td>
+    <td>${row.notes? escapeHtml(row.notes):'—'}</td>
+    <td>
+      <button class="btn btn-ghost" data-act="edit" data-id="${row.id}">تحرير</button>
+      <button class="btn btn-danger" data-act="del" data-id="${row.id}">حذف</button>
+    </td>`;
+  return tr;
+}
+function renderTable(){
+  tbody.innerHTML='';
+  state.sessions.slice().sort((a,b)=> a.date.localeCompare(b.date)).forEach(r=> tbody.appendChild(rowToTr(r)));
+}
+function renderAll(){ renderKPIs(); renderTable(); syncInputs(); }
+function syncInputs(){ inpDate.value = todayISO(); totalPages.value = state.settings.totalPages||604; tPrev.value=state.settings.times.prev; tSabqi.value=state.settings.times.sabqi; tManzil.value=state.settings.times.manzil; leadMins.value=state.settings.lead||10; }
+
+// ---------- add/edit/delete ----------
+tbody.addEventListener('click', e=>{
+  const btn = e.target.closest('button'); if(!btn) return;
+  const id = btn.dataset.id; const act = btn.dataset.act;
+  if(act==='del'){ state.sessions = state.sessions.filter(s=> s.id!==id); save(); renderAll(); }
+  if(act==='edit'){ startEditRow(id, btn.closest('tr')); }
+});
+function startEditRow(id, tr){
+  const row = state.sessions.find(s=> s.id===id); if(!row) return;
+  tr.innerHTML = `
+    <td><input type="date" value="${row.date}"></td>
+    <td>
+      <select>
+        <option ${row.period==='بعد الفجر'?'selected':''}>بعد الفجر</option>
+        <option ${row.period==='بين المحاضرات'?'selected':''}>بين المحاضرات</option>
+        <option ${row.period==='بعد العشاء'?'selected':''}>بعد العشاء</option>
+        <option ${row.period==='مرن'?'selected':''}>مرن</option>
+      </select>
+    </td>
+    <td>
+      <select>
+        <option ${row.task==='سَبَق'?'selected':''}>سَبَق</option>
+        <option ${row.task==='سَبقي'?'selected':''}>سَبقي</option>
+        <option ${row.task==='مَنزِل'?'selected':''}>مَنزِل</option>
+      </select>
+    </td>
+    <td><input type="number" value="${row.goal??0}"></td>
+    <td><input type="number" value="${row.actual??0}"></td>
+    <td>—</td>
+    <td><input value="${row.range||''}"></td>
+    <td><input value="${row.notes||''}"></td>
+    <td>
+      <button class="btn btn-primary" data-act="save">حفظ</button>
+      <button class="btn" data-act="cancel">إلغاء</button>
+    </td>`;
+  tr.querySelector('[data-act=save]').addEventListener('click', ()=>{
+    const cells = tr.querySelectorAll('td');
+    const next = {
+      date: cells[0].querySelector('input').value || row.date,
+      period: cells[1].querySelector('select').value,
+      task: cells[2].querySelector('select').value,
+      goal: +cells[3].querySelector('input').value || 0,
+      actual: +cells[4].querySelector('input').value || 0,
+      range: cells[6].querySelector('input').value || undefined,
+      notes: cells[7].querySelector('input').value || undefined
+    };
+    Object.assign(row, next); save(); renderAll();
+  });
+  tr.querySelector('[data-act=cancel]').addEventListener('click', renderAll);
+}
+btnAdd.addEventListener('click', ()=>{
+  const s = { id:makeId(), date: inpDate.value||todayISO(), period: inpPeriod.value, task: inpTask.value, goal:+inpGoal.value||0, actual:+inpActual.value||0, range: inpRange.value||undefined, notes: inpNotes.value||undefined };
+  state.sessions.push(s); save(); renderAll();
+  inpTask.value='سَبَق'; inpGoal.value='2'; inpActual.value='2'; inpRange.value=''; inpNotes.value='';
+});
+
+// ---------- export/import ----------
+btnExportJSON.addEventListener('click', ()=> download('quran-tracker.json', JSON.stringify(state,null,2), 'application/json'));
+btnExportCSV.addEventListener('click', ()=>{
+  const header = ['id','date','period','task','goal','actual','range','notes'];
+  const lines = [header.join(',')];
+  state.sessions.forEach(r=> lines.push([r.id,r.date,r.period,r.task,r.goal,r.actual,(r.range||'').replace(/\n/g,' '),(r.notes||'').replace(/\n/g,' ')].join(',')));
+  download('quran-sessions.csv', lines.join('\n'), 'text/csv');
+});
+btnExportICS.addEventListener('click', ()=>{
+  const ics = buildICSReminders(30);
+  download('quran-reminders.ics', ics, 'text/calendar');
+});
+fileImport.addEventListener('change', e=>{
+  const f = e.target.files && e.target.files[0]; if(!f) return;
+  const reader=new FileReader();
+  reader.onload=()=>{ try{ const data=JSON.parse(String(reader.result)); if(data.settings) state.settings=data.settings; if(Array.isArray(data.sessions)) state.sessions=data.sessions; save(); renderAll(); alert('تم الاستيراد.'); }catch(e){ alert('تعذّر الاستيراد.'); } };
+  reader.readAsText(f);
+  e.target.value='';
+});
+btnReset.addEventListener('click', ()=>{
+  if(!confirm('سيتم مسح جميع البيانات من هذا المتصفح. متابعة؟')) return;
+  state.sessions=[]; state.settings={ totalPages:604, times:{prev:'05:30', sabqi:'16:30', manzil:'20:30'}, lead:10 }; save(); renderAll();
+});
+
+// ---------- notifications (local, page must be open) ----------
+btnAskNotif.addEventListener('click', ()=>{
+  if(!('Notification' in window)) return alert('المتصفح لا يدعم الإشعارات.');
+  Notification.requestPermission().then(p=> alert(p==='granted'?'تم السماح بالإشعارات.':'لم يتم السماح.'));
+});
+btnTestNotif.addEventListener('click', ()=> showNotif('تذكير الحفظ', 'اختبار إشعار — جاهز للتسميع؟'));
+
+function showNotif(title, body){
+  if(Notification.permission!=='granted') return alert('اسمح بالإشعارات أولًا.');
+  new Notification(title, { body });
+}
+
+// check every minute for lead reminders
+setInterval(()=>{
+  const now = new Date(); const lead = (+state.settings.lead||10);
+  const entries = [{name:'سَبَق',t:state.settings.times.prev},{name:'سَبقي',t:state.settings.times.sabqi},{name:'مَنزِل',t:state.settings.times.manzil}];
+  entries.forEach(e=>{
+    if(!e.t) return;
+    const [H,M] = e.t.split(':').map(Number);
+    const target = new Date(); target.setHours(H,M,0,0);
+    const diff = (target-now)/60000;
+    if(diff <= lead && diff > lead-1){
+      const msg = MOTIVATION[Math.floor(Math.random()*MOTIVATION.length)];
+      showNotif('تذكير الحفظ — '+e.name, msg);
+    }
+  });
+}, 60000);
+
+// ---------- ICS (parse/import + find free slots + export) ----------
+const icsInputEl = document.getElementById('icsInput');
+icsInputEl.addEventListener('change', e=>{
+  const f = e.target.files && e.target.files[0]; if(!f) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{ window._icsEvents = parseICS(String(reader.result)); alert('تم استيراد التقويم.'); };
+  reader.readAsText(f);
+});
+
+btnFindSlots.addEventListener('click', ()=>{
+  const events = (window._icsEvents||[]).filter(ev=> ev.start && ev.end);
+  if(!events.length) return alert('لم يتم العثور على أحداث. حمّل ملف ICS أولًا.');
+  const minMinutes = +minSlot.value || 25;
+  const grouped = groupBy(events, ev=> ev.start.toISOString().slice(0,10));
+  const days = Object.keys(grouped).sort();
+  const out = [];
+  days.forEach(d=>{
+    const dayEvents = grouped[d].sort((a,b)=> a.start - b.start);
+    const open = findFreeWindows(dayEvents, minMinutes);
+    if(open.length){
+      out.push(`<h4>اليوم ${d}</h4>`);
+      out.push('<ul>');
+      open.forEach(w=> out.push(`<li>${fmtTime(w.start)}–${fmtTime(w.end)} (${w.minutes} دقيقة) <button class="btn btn-ghost" data-slot="${w.start.toISOString()}|${w.end.toISOString()}">أضف جلسة</button></li>`));
+      out.push('</ul>');
+    }
+  });
+  const wrap = document.getElementById('slotsWrap');
+  wrap.innerHTML = out.join('') || '<div class="small">لا فراغات متاحة بحسب الحد الأدنى المحدد.</div>';
+  wrap.querySelectorAll('button[data-slot]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const [s,e] = btn.dataset.slot.split('|').map(x=> new Date(x));
+      const date = s.toISOString().slice(0,10);
+      state.sessions.push({ id:makeId(), date, period:'مرن', task:'سَبَق', goal:2, actual:0, notes:`موعد مقترح: ${fmtTime(s)}–${fmtTime(e)}` });
+      save(); renderAll(); alert('تمت إضافة جلسة مقترحة لليوم المحدد.');
+    });
+  });
+});
+
+function groupBy(arr, keyfn){ return arr.reduce((acc,it)=>{ const k=keyfn(it); (acc[k]=acc[k]||[]).push(it); return acc; },{}); }
+function fmtTime(d){ return d.toTimeString().slice(0,5); }
+
+function findFreeWindows(events, minMinutes){
+  if(!events.length) return [{ start: new Date(new Date().setHours(5,0,0,0)), end: new Date(new Date().setHours(23,0,0,0)), minutes: (18*60) }];
+  const day = new Date(events[0].start); day.setHours(0,0,0,0);
+  const startDay = new Date(day); startDay.setHours(5,0,0,0);
+  const endDay = new Date(day); endDay.setHours(23,0,0,0);
+  const windows = [];
+  let cursor = startDay;
+  events.forEach(ev=>{
+    if(ev.end <= cursor) return;
+    if(ev.start > cursor){
+      const gap = (ev.start - cursor)/60000;
+      if(gap >= minMinutes) windows.push({ start: new Date(cursor), end: new Date(ev.start), minutes: Math.floor(gap) });
+    }
+    cursor = new Date(Math.max(cursor, ev.end));
+  });
+  if(endDay > cursor){
+    const gap = (endDay - cursor)/60000;
+    if(gap >= minMinutes) windows.push({ start: new Date(cursor), end: new Date(endDay), minutes: Math.floor(gap) });
+  }
+  return windows;
+}
+
+// minimal ICS parse & export
+function parseICS(text){
+  text = text.replace(/\r?\n[ \t]/g, '');
+  const lines = text.split(/\r?\n/);
+  const events=[]; let cur=null;
+  lines.forEach(line=>{
+    if(line==='BEGIN:VEVENT'){ cur={}; }
+    else if(line==='END:VEVENT'){ if(cur) events.push(cur); cur=null; }
+    else if(cur){
+      if(line.startsWith('DTSTART')){ cur.start = parseICSTime(line.split(':')[1]); }
+      else if(line.startsWith('DTEND')){ cur.end = parseICSTime(line.split(':')[1]); }
+      else if(line.startsWith('SUMMARY')){ cur.summary = line.split(':').slice(1).join(':'); }
+    }
+  });
+  return events;
+}
+function parseICSTime(v){
+  if(!v) return null;
+  if(v.endsWith('Z')) return new Date(v);
+  const yyyy=v.slice(0,4), mm=v.slice(4,6), dd=v.slice(6,8), HH=v.slice(9,11), MM=v.slice(11,13), SS=v.slice(13,15);
+  return new Date(+yyyy, +mm-1, +dd, +HH, +MM, +SS||0);
+}
+function buildICSReminders(days){
+  function fmt(d){ const p=n=> String(n).padStart(2,'0'); return d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'T'+p(d.getHours())+p(d.getMinutes())+'00'; }
+  function uid(){ return makeId()+'@quran-tracker'; }
+  const times = state.settings.times; const lead = (+state.settings.lead||10);
+  const out = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Quran Tracker//AR//EN'];
+  for(let i=0;i<days;i++){
+    const base = new Date(); base.setDate(base.getDate()+i);
+    [['سَبَق',times.prev],['سَبقي',times.sabqi],['مَنزِل',times.manzil]].forEach(([name,t])=>{
+      if(!t) return;
+      const [H,M] = t.split(':').map(Number);
+      const s = new Date(base.getFullYear(), base.getMonth(), base.getDate(), H, M, 0);
+      const e = new Date(s.getTime()+30*60000);
+      out.push('BEGIN:VEVENT','UID:'+uid(),'DTSTART:'+fmt(s),'DTEND:'+fmt(e),'SUMMARY:تذكير الحفظ — '+name,'BEGIN:VALARM','TRIGGER:-PT'+lead+'M','ACTION:DISPLAY','DESCRIPTION:تذكير الحفظ','END:VALARM','END:VEVENT');
+    });
+  }
+  out.push('END:VCALENDAR'); return out.join('\r\n');
+}
+
+// ---------- helpers ----------
+function download(filename, content, mime){
+  const blob = new Blob([content], {type:(mime||'text/plain')+';charset=utf-8'});
+  const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url);
+}
+function escapeHtml(s){ return String(s).replace(/[&<>\"]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[m])); }
+
+// ---------- init ----------
+load(); renderAll();
+</script>
+</body>
+</html>
