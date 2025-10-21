@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>متتبع الحفظ</title>
+<meta name="theme-color" content="#14b8a6">
+<style>
+:root{
+  --bg:#f7fdfb; --card:#ffffff; --text:#0f172a; --muted:#64748b;
+  --primary:#14b8a6; --primary-600:#0d9488; --accent:#8b5cf6;
+  --danger:#ef4444; --warn:#f59e0b; --border:#e2e8f0;
+  --green-50:#e8f5e9; --red-50:#fee2e2; --shadow:0 6px 18px rgba(0,0,0,.06);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);
+  font-family:"Tajawal",system-ui,-apple-system,Segoe UI,Roboto,"Noto Naskh Arabic",Arial,sans-serif}
+.container{max-width:1200px;margin:0 auto;padding:16px 16px 64px}
+h1{margin:0 0 6px;font-size:28px;letter-spacing:.2px}
+.sub{color:var(--muted);font-size:14px;margin:0 0 16px}
+.grid{display:grid;gap:12px}
+.kpis{grid-template-columns:repeat(4,1fr)}
+@media (max-width:980px){.kpis{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:560px){.kpis{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
+.card h3{margin:0 0 8px;font-size:16px}
+.kpi-val{font-size:24px;font-weight:800}
+.small{font-size:12px;color:var(--muted)}
+.progress{width:100%;height:8px;background:#e5e7eb;border-radius:999px;overflow:hidden}
+.progress > span{display:block;height:100%;background:var(--primary)}
+.row{display:grid;gap:12px;grid-template-columns:repeat(8,1fr);align-items:end}
+@media (max-width:980px){.row{grid-template-columns:1fr 1fr}}
+label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
+input,select,textarea,button{font:inherit;border:1px solid var(--border);border-radius:12px;padding:10px;background:#fff;color:var(--text)}
+input[type=date]{padding:8px 10px}
+button{cursor:pointer;transition:transform .08s ease, box-shadow .2s ease; position:relative; overflow:hidden}
+.btn{padding:10px 14px;border-radius:12px;border:1px solid var(--border);background:#fff}
+.btn-primary{background:var(--primary);border-color:var(--primary);color:#fff}
+.btn-danger{background:var(--danger);border-color:var(--danger);color:#fff}
+.btn-ghost{background:transparent}
+.btn:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(20,184,166,.15)}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#fff}
+thead th{background:#eff6ff;font-weight:700;font-size:13px;color:#334155;padding:10px 8px;border-bottom:1px solid var(--border);text-align:right}
+tbody td{padding:10px 8px;border-bottom:1px solid var(--border);vertical-align:middle;text-align:right}
+tbody tr:last-child td{border-bottom:none}
+.badge{display:inline-block;padding:.25rem .6rem;border-radius:999px;font-size:12px;border:1px solid var(--border)}
+.badge-outline{background:#fff}
+.badge-sec{background:#f8fafc}
+.badge-new{background:#e8f5e9;color:#065f46;border-color:#10b981}
+.status-ok{color:#065f46}.status-late{color:#b91c1c}
+.row-warn{background:var(--red-50)}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:end}
+hr{border:none;border-top:1px dashed var(--border);margin:12px 0}
+.footer{color:var(--muted);font-size:12px;text-align:center;margin-top:24px}
+.section-title{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.notice{padding:10px;border-radius:12px;background:#ecfeff;border:1px solid #a5f3fc;color:#0e7490;font-size:13px}
+.icon{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-600));color:#fff}
+.ripple{position:absolute;border-radius:50%;transform:scale(0);animation:ripple .6s linear;opacity:.6;background:#fff}
+@keyframes ripple{to{transform:scale(4);opacity:0}}
+.quote{background:#fff; border:1px solid var(--border); border-radius:12px; padding:10px}
+.quote small{color:var(--muted)}
+.canvas-wrap{background:#fff;border:1px solid var(--border);border-radius:16px;padding:12px;box-shadow:var(--shadow)}
+.legend{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.legend .box{width:10px;height:10px;border-radius:3px;display:inline-block}
+.legend span{font-size:12px;color:#334155}
+.pill{display:inline-block;padding:.3rem .6rem;border-radius:999px;background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;font-size:12px}
+</style>
+</head>
+<body>
+<div class="container">
+  <header style="display:flex;align-items:center;gap:10px">
+    <div class="icon" title="متتبع الحفظ">✓</div>
+    <div>
+      <h1>متتبع الحفظ</h1>
+      <p class="sub">سَبَق – سَبقي – مَنزِل • تذكيرات • خطة سنة • استثناء السور المحفوظة • رسوم بيانية</p>
+    </div>
+  </header>
+
+  <section class="grid kpis" style="margin-top:12px">
+    <div class="card">
+      <h3>مكتمل جديد (تراكمي)</h3>
+      <div class="kpi-val" id="kpiNewDone">0</div>
+      <div class="small">صفحة من أصل <span id="kpiTotalPages">604</span></div>
+      <div class="progress" style="margin-top:8px"><span id="kpiProgress" style="width:0%"></span></div>
+    </div>
+    <div class="card"><h3>المتبقّي إلى الختم</h3><div class="kpi-val" id="kpiLeft">604</div><div class="small">صفحة</div></div>
+    <div class="card"><h3>على المسار (آخر 7 أيام)</h3><div class="kpi-val"><span id="kpiOnTrack">0</span>%</div><div class="small">جلسات بلا نقص</div></div>
+    <div class="card"><h3>إجمالي النقص</h3><div class="kpi-val" id="kpiDeficit">0</div><div class="small">صفحة</div></div>
+  </section>
+
+  <!-- الإعدادات والتذكيرات -->
+  <section class="card" style="margin-top:12px">
+    <div class="section-title"><h3>الإعدادات والتذكيرات</h3><span class="pill">هوية هادئة</span></div>
+    <div class="row">
+      <div><label>إجمالي الصفحات</label><input type="number" id="totalPages" value="604"></div>
+      <div><label>وقت سَبَق</label><input type="time" id="tPrev" value="05:30"></div>
+      <div><label>وقت سَبقي</label><input type="time" id="tSabqi" value="16:30"></div>
+      <div><label>وقت مَنزِل</label><input type="time" id="tManzil" value="20:30"></div>
+      <div><label>تنبيه قبل الموعد (دقيقة)</label><input type="number" id="leadMins" value="10"></div>
+      <div style="display:flex;gap:8px;align-items:end">
+        <button class="btn" id="btnAskNotif">سماح بالإشعارات</button>
+        <button class="btn" id="btnTestNotif">اختبار إشعار</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- إضافة جلسة -->
+  <section class="card" style="margin-top:12px">
+    <div class="section-title">
+      <h3>إضافة جلسة</h3>
+      <div>
+        <button class="btn btn-ghost icon" id="iconSpark" title="حماس">★</button>
+      </div>
+    </div>
+    <div class="row">
+      <div><label>التاريخ</label><input type="date" id="inpDate"></div>
+      <div><label>الفترة</label>
+        <select id="inpPeriod"><option>بعد الفجر</option><option>بين المحاضرات</option><option>بعد العشاء</option><option>مرن</option></select>
+      </div>
+      <div><label>المهمة</label><select id="inpTask"><option>سَبَق</option><option>سَبقي</option><option>مَنزِل</option></select></div>
+      <div><label>الهدف (صفحات)</label><input type="number" id="inpGoal" value="2"></div>
+      <div><label>المنفّذ (صفحات)</label><input type="number" id="inpActual" value="2"></div>
+      <div><label>نطاق الصفحات</label><input id="inpRange" placeholder="مثال: 120–122 أو البقرة 1–20"></div>
+      <div style="grid-column:1/-1"><label>ملاحظات</label><input id="inpNotes" placeholder="ملاحظة/موضع توقف…"></div>
+      <div style="grid-column:1/-1;display:flex;gap:8px;justify-content:flex-end"><button class="btn-primary" id="btnAdd">إضافة</button></div>
+    </div>
+  </section>
+
+  <!-- السور المحفوظة سابقًا + الخطة السنوية -->
+  <section class="card" style="margin-top:12px">
+    <div class="section-title"><h3>السور المحفوظة سابقًا + الخطة السنوية</h3><span class="small">تُخصم من خطة الجديد</span></div>
+    <div class="row">
+      <div style="grid-column:1/-1"><label>اختر السور المحفوظة</label>
+        <select id="surahSelect" multiple size="6" style="width:100%;height:140px"></select>
+      </div>
+      <div><label>تاريخ البداية</label><input type="date" id="planStart"></div>
+      <div><label>تاريخ الإكمال المستهدف</label><input type="date" id="planEnd"></div>
+      <div><label>صفحات محفوظة أخرى (إدخال يدوي)</label><input type="number" id="manualMem" value="0"></div>
+      <div><label>حساب تلقائي</label><button class="btn" id="btnRecalc">إعادة حساب الخطة</button></div>
+      <div style="grid-column:1/-1" class="notice">الحساب تقريبي لصفحات السور وفق عدد الآيات. لأدقّ نتائج، يمكن لاحقًا استخدام خريطة الصفحات (مصحف المدينة 604 صفحة) لتوزيع أدق.</div>
+    </div>
+    <div class="grid" style="grid-template-columns:1fr 1fr; gap:12px; margin-top:10px">
+      <div class="card" style="border-style:dashed">
+        <h3>ملخص الخطة</h3>
+        <div class="small">المتبقي (صفحات): <b id="planPagesLeft">—</b></div>
+        <div class="small">أيام متبقية: <b id="planDaysLeft">—</b></div>
+        <div class="small">صفحات/اليوم المقترحة: <b id="planPagesPerDay">—</b></div>
+      </div>
+      <div class="card" style="border-style:dashed">
+        <h3>أهداف الأشهر (تقريبية)</h3>
+        <div id="planMonthly" class="small">—</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- السجل والتصدير -->
+  <section class="card" style="margin-top:12px">
+    <div class="section-title">
+      <h3>سجلات الجلسات</h3>
+      <div class="toolbar">
+        <button class="btn" id="btnExportJSON">تصدير JSON</button>
+        <button class="btn" id="btnExportCSV">تصدير CSV</button>
+        <button class="btn" id="btnExportICS">تصدير أحداث (ICS)</button>
+        <label class="btn" for="fileImport" style="cursor:pointer">استيراد JSON</label>
+        <input id="fileImport" type="file" accept="application/json" style="display:none">
+        <button class="btn btn-danger" id="btnReset">إعادة ضبط</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table id="tbl"><thead><tr><th>التاريخ</th><th>الفترة</th><th>المهمة</th><th>الهدف</th><th>المنفّذ</th><th>النقص</th><th>النطاق</th><th>ملاحظات</th><th>إجراءات</th></tr></thead><tbody id="tbody"></tbody></table>
+    </div>
+  </section>
+
+  <!-- الرسم البياني -->
+  <section class="canvas-wrap" style="margin-top:12px">
+    <h3 style="margin:0 0 8px">الإنجاز اليومي (آخر 30 يومًا)</h3>
+    <canvas id="progressCanvas" width="1100" height="260" style="width:100%;height:260px"></canvas>
+    <div class="legend"><span class="box" style="background:var(--primary)"></span><span>سَبَق (صفحات منفّذة يوميًا)</span></div>
+  </section>
+
+  <!-- عبارات تحفيزية -->
+  <section class="card" style="margin-top:12px">
+    <div class="section-title"><h3>عبارات تحفيزية</h3><button class="btn" id="btnNextQuote">اقتباس آخر</button></div>
+    <div class="quote" id="quoteBox">
+      <div id="quoteText">"خيرُكم من تعلّم القرآنَ وعلّمه."</div>
+      <small id="quoteSource">— حديث صحيح (البخاري)</small>
+    </div>
+  </section>
+
+  <!-- تقويم Apple (ICS) -->
+  <section class="card" style="margin-top:12px">
+    <div class="section-title"><h3>تقويم Apple (ICS): اقتراح أوقات فراغ</h3></div>
+    <div class="row">
+      <div style="grid-column:1/-1" class="small">للعثور على أوقات فراغ للحفظ: من Apple Calendar أو iCloud قم بتصدير تقويمك بصيغة <b>.ics</b> ثم ارفعه هنا لتحليل الفراغات.</div>
+      <div><label>ملف تقويم (ICS)</label><input type="file" id="icsInput" accept=".ics,text/calendar"></div>
+      <div><label>الحد الأدنى لمدة الجلسة (دقيقة)</label><input type="number" id="minSlot" value="25"></div>
+      <div style="grid-column:1/-1;display:flex;gap:8px;align-items:end">
+        <button class="btn" id="btnFindSlots">اقتراح أوقات فراغ لليوم/الأسبوع</button>
+      </div>
+    </div>
+    <div id="slotsWrap" style="margin-top:10px"></div>
+  </section>
+
+  <!-- تسجيل برقم الهاتف (واجهة فقط) -->
+  <section class="card" style="margin-top:12px">
+    <div class="section-title"><h3>تسجيل برقم الهاتف (اختياري)</h3><span class="small">واجهة فقط — يتطلب خدمة خارجية (Firebase Auth مثلًا)</span></div>
+    <div class="row">
+      <div><label>رقم الهاتف (رمز الدولة)</label><input id="phoneInput" placeholder="+9685XXXXXXXX"></div>
+      <div><label>رمز التحقق</label><input id="otpInput" placeholder="123456"></div>
+      <div style="display:flex;gap:8px;align-items:end">
+        <button class="btn" id="btnSendOTP">إرسال رمز</button>
+        <button class="btn" id="btnVerifyOTP">تفعيل</button>
+      </div>
+    </div>
+    <div class="small">يمكن ربطه فعليًا لاحقًا عبر مفاتيح Firebase داخل سكربت مستقل؛ هذه الواجهة لا ترسل أي شيء الآن.</div>
+  </section>
+
+  <p class="footer">© متتبع الحفظ — يعمل محليًا • للتنبيه الموثوق على iPhone استخدم تصدير ICS إلى تقويم Apple • لتحديث الموقع: استبدل index.html في GitHub وسيتم النشر تلقائيًا.</p>
+</div>
+
+<script>
+// ---------- بيانات السور (اسم + عدد الآيات) ----------
+const SURAHS = [
+  ['الفاتحة',7],['البقرة',286],['آل عمران',200],['النساء',176],['المائدة',120],['الأنعام',165],['الأعراف',206],
+  ['الأنفال',75],['التوبة',129],['يونس',109],['هود',123],['يوسف',111],['الرعد',43],['إبراهيم',52],['الحجر',99],
+  ['النحل',128],['الإسراء',111],['الكهف',110],['مريم',98],['طه',135],['الأنبياء',112],['الحج',78],['المؤمنون',118],
+  ['النور',64],['الفرقان',77],['الشعراء',227],['النمل',93],['القصص',88],['العنكبوت',69],['الروم',60],['لقمان',34],
+  ['السجدة',30],['الأحزاب',73],['سبإ',54],['فاطر',45],['يس',83],['الصافات',182],['ص',88],['الزمر',75],['غافر',85],
+  ['فصلت',54],['الشورى',53],['الزخرف',89],['الدخان',59],['الجاثية',37],['الأحقاف',35],['محمد',38],['الفتح',29],
+  ['الحجرات',18],['ق',45],['الذاريات',60],['الطور',49],['النجم',62],['القمر',55],['الرحمن',78],['الواقعة',96],
+  ['الحديد',29],['المجادلة',22],['الحشر',24],['الممتحنة',13],['الصف',14],['الجمعة',11],['المنافقون',11],['التغابن',18],
+  ['الطلاق',12],['التحريم',12],['الملك',30],['القلم',52],['الحاقة',52],['المعارج',44],['نوح',28],['الجن',28],
+  ['المزمل',20],['المدثر',56],['القيامة',40],['الإنسان',31],['المرسلات',50],['النبإ',40],['النازعات',46],['عبس',42],
+  ['التكوير',29],['الإنفطار',19],['المطففين',36],['الإنشقاق',25],['البروج',22],['الطارق',17],['الأعلى',19],['الغاشية',26],
+  ['الفجر',30],['البلد',20],['الشمس',15],['الليل',21],['الضحى',11],['الشرح',8],['التين',8],['العلق',19],['القدر',5],
+  ['البينة',8],['الزلزلة',8],['العاديات',11],['القارعة',11],['التكاثر',8],['العصر',3],['الهمزة',9],['الفيل',5],
+  ['قريش',4],['الماعون',7],['الكوثر',3],['الكافرون',6],['النصر',3],['المسد',5],['الإخلاص',4],['الفلق',5],['الناس',6]
+];
+const TOTAL_AYAHS = SURAHS.reduce((a, s)=> a + s[1], 0); // 6236
+const AYAHS_PER_PAGE = TOTAL_AYAHS/604; // ≈10.33
+
+// ---------- الحالة ----------
+const LS_KEY = "quran-tracker-v2";
+const state = { settings:{ totalPages:604, times:{prev:"05:30", sabqi:"16:30", manzil:"20:30"}, lead:10 }, sessions:[], memorizedSurahs:[], manualMem:0 };
+
+// ---------- مراجع DOM ----------
+const kpiNewDone = document.getElementById('kpiNewDone');
+const kpiTotalPages = document.getElementById('kpiTotalPages');
+const kpiLeft = document.getElementById('kpiLeft');
+const kpiOnTrack = document.getElementById('kpiOnTrack');
+const kpiDeficit = document.getElementById('kpiDeficit');
+const kpiProgress = document.getElementById('kpiProgress');
+
+const totalPages = document.getElementById('totalPages');
+const tPrev = document.getElementById('tPrev'); const tSabqi = document.getElementById('tSabqi'); const tManzil = document.getElementById('tManzil');
+const leadMins = document.getElementById('leadMins');
+const btnAskNotif = document.getElementById('btnAskNotif'); const btnTestNotif = document.getElementById('btnTestNotif');
+
+const inpDate = document.getElementById('inpDate'); const inpPeriod = document.getElementById('inpPeriod'); const inpTask = document.getElementById('inpTask');
+const inpGoal = document.getElementById('inpGoal'); const inpActual = document.getElementById('inpActual'); const inpRange = document.getElementById('inpRange'); const inpNotes = document.getElementById('inpNotes');
+const btnAdd = document.getElementById('btnAdd');
+
+const tbody = document.getElementById('tbody'); const fileImport = document.getElementById('fileImport');
+const btnExportJSON = document.getElementById('btnExportJSON'); const btnExportCSV = document.getElementById('btnExportCSV'); const btnExportICS = document.getElementById('btnExportICS');
+const btnReset = document.getElementById('btnReset');
+
+const surahSelect = document.getElementById('surahSelect'); const planStart = document.getElementById('planStart'); const planEnd = document.getElementById('planEnd');
+const manualMem = document.getElementById('manualMem'); const btnRecalc = document.getElementById('btnRecalc');
+const planPagesLeft = document.getElementById('planPagesLeft'); const planDaysLeft = document.getElementById('planDaysLeft'); const planPagesPerDay = document.getElementById('planPagesPerDay'); const planMonthly = document.getElementById('planMonthly');
+
+const progressCanvas = document.getElementById('progressCanvas');
+
+const quoteBox = document.getElementById('quoteBox'); const quoteText = document.getElementById('quoteText'); const quoteSource = document.getElementById('quoteSource');
+const btnNextQuote = document.getElementById('btnNextQuote');
+
+const icsInput = document.getElementById('icsInput'); const minSlot = document.getElementById('minSlot'); const btnFindSlots = document.getElementById('btnFindSlots'); const slotsWrap = document.getElementById('slotsWrap');
+
+// ---------- وظائف عامة ----------
+const todayISO = () => {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${dd}`;
+};
+
+function save(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+function load(){ try{ const raw=localStorage.getItem(LS_KEY); if(raw){ const d=JSON.parse(raw); Object.assign(state, d); } }catch{} }
+function makeId(){ return Math.random().toString(36).slice(2)+Date.now().toString(36); }
+function download(filename, content, mime){ const blob=new Blob([content], {type:(mime||'text/plain')+';charset=utf-8'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=filename; a.click(); URL.revokeObjectURL(url); }
+
+// Ripple effect
+document.addEventListener('click', (e)=>{
+  const btn = e.target.closest('.btn'); if(!btn) return;
+  const circle = document.createElement('span'); const size = Math.max(btn.clientWidth, btn.clientHeight);
+  const rect = btn.getBoundingClientRect();
+  circle.style.width = circle.style.height = size+'px';
+  circle.style.left = (e.clientX - rect.left - size/2)+'px';
+  circle.style.top = (e.clientY - rect.top - size/2)+'px';
+  circle.className = 'ripple'; btn.appendChild(circle);
+  setTimeout(()=> circle.remove(), 600);
+});
+
+// ---------- Init ----------
+function initSurahs(){
+  surahSelect.innerHTML = SURAHS.map((s,idx)=> `<option value="${idx}">${idx+1}. ${s[0]} — ${s[1]} آية</option>`).join('');
+  if(state.memorizedSurahs?.length){ [...surahSelect.options].forEach(o=>{ if(state.memorizedSurahs.includes(+o.value)) o.selected = true; }); }
+}
+function syncInputs(){
+  kpiTotalPages.textContent = (+state.settings.totalPages||604);
+  totalPages.value = state.settings.totalPages;
+  tPrev.value = state.settings.times.prev; tSabqi.value = state.settings.times.sabqi; tManzil.value = state.settings.times.manzil; leadMins.value = state.settings.lead;
+  inpDate.value = todayISO();
+  planStart.value = planStart.value || todayISO();
+  if(!planEnd.value){ const d=new Date(); d.setDate(d.getDate()+365); planEnd.value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+  manualMem.value = state.manualMem||0;
+}
+function computeTotals(){
+  const arr = state.sessions.slice().sort((a,b)=> a.date.localeCompare(b.date));
+  const newDone = arr.filter(s=> s.task==='سَبَق').reduce((sum,s)=> sum + (+s.actual||0), 0);
+  const allDeficit = arr.reduce((sum,s)=> sum + Math.max((+s.goal||0) - (+s.actual||0), 0), 0);
+  const min7 = new Date(Date.now()-7*864e5).toISOString().slice(0,10);
+  const last7 = arr.filter(s=> s.date >= min7);
+  const withGoal = last7.filter(s=> (+s.goal||0)>0);
+  const onTrack = withGoal.filter(s=> Math.max((+s.goal||0) - (+s.actual||0),0)===0);
+  const pagesLeft = Math.max((+state.settings.totalPages||604) - newDone, 0);
+  const perc = Math.min(100, Math.round((newDone/(+state.settings.totalPages||604))*100));
+  return { newDone, allDeficit, last7Perc: withGoal.length? Math.round(onTrack.length/withGoal.length*100):0, pagesLeft, perc };
+}
+function renderKPIs(){
+  const t = computeTotals();
+  kpiNewDone.textContent = t.newDone; kpiLeft.textContent = t.pagesLeft; kpiOnTrack.textContent = t.last7Perc; kpiDeficit.textContent = t.allDeficit; kpiProgress.style.width = t.perc + '%';
+}
+function rowToTr(row){
+  const tr = document.createElement('tr');
+  const deficit = Math.max((+row.goal||0)-(+row.actual||0),0);
+  if(deficit>0) tr.classList.add('row-warn');
+  tr.innerHTML = `<td>${row.date}</td><td>${row.period||'—'}</td><td><span class="badge ${row.task==='سَبَق'?'badge-new':row.task==='سَبقي'?'badge-sec':'badge-outline'}">${row.task}</span></td><td>${row.goal??0}</td><td>${row.actual??0}</td><td>${deficit>0?`<span class="status-late">${deficit}</span>`:`<span class="status-ok">0</span>`}</td><td>${row.range||'—'}</td><td>${row.notes||'—'}</td><td><button class="btn btn-ghost" data-act="edit" data-id="${row.id}">تحرير</button> <button class="btn btn-danger" data-act="del" data-id="${row.id}">حذف</button></td>`;
+  return tr;
+}
+function renderTable(){
+  tbody.innerHTML='';
+  state.sessions.slice().sort((a,b)=> a.date.localeCompare(b.date)).forEach(r=> tbody.appendChild(rowToTr(r)));
+}
+function renderAll(){ renderKPIs(); renderTable(); drawChart(); recalcPlan(); }
+
+// ---------- الأحداث ---------
+document.getElementById('iconSpark').addEventListener('click', ()=> alert('هيا بنا! لا تكسر السلسلة ✨'));
+
+document.getElementById('btnAdd').addEventListener('click', ()=>{
+  const s = { id:makeId(), date: inpDate.value||todayISO(), period: inpPeriod.value, task: inpTask.value, goal:+inpGoal.value||0, actual:+inpActual.value||0, range: inpRange.value||undefined, notes: inpNotes.value||undefined };
+  state.sessions.push(s); save(); renderAll();
+  inpTask.value='سَبَق'; inpGoal.value='2'; inpActual.value='2'; inpRange.value=''; inpNotes.value='';
+});
+tbody.addEventListener('click', e=>{
+  const btn = e.target.closest('button'); if(!btn) return;
+  const id = btn.dataset.id; const act = btn.dataset.act;
+  if(act==='del'){ state.sessions = state.sessions.filter(s=> s.id!==id); save(); renderAll(); }
+  if(act==='edit'){ startEditRow(id, btn.closest('tr')); }
+});
+function startEditRow(id, tr){
+  const row = state.sessions.find(s=> s.id===id); if(!row) return;
+  tr.innerHTML = `<td><input type="date" value="${row.date}"></td><td><select><option ${row.period==='بعد الفجر'?'selected':''}>بعد الفجر</option><option ${row.period==='بين المحاضرات'?'selected':''}>بين المحاضرات</option><option ${row.period==='بعد العشاء'?'selected':''}>بعد العشاء</option><option ${row.period==='مرن'?'selected':''}>مرن</option></select></td><td><select><option ${row.task==='سَبَق'?'selected':''}>سَبَق</option><option ${row.task==='سَبقي'?'selected':''}>سَبقي</option><option ${row.task==='مَنزِل'?'selected':''}>مَنزِل</option></select></td><td><input type="number" value="${row.goal??0}"></td><td><input type="number" value="${row.actual??0}"></td><td>—</td><td><input value="${row.range||''}"></td><td><input value="${row.notes||''}"></td><td><button class="btn btn-primary" data-act="save">حفظ</button> <button class="btn" data-act="cancel">إلغاء</button></td>`;
+  tr.querySelector('[data-act=save]').addEventListener('click', ()=>{
+    const cells = tr.querySelectorAll('td');
+    Object.assign(row, { date: cells[0].querySelector('input').value || row.date, period: cells[1].querySelector('select').value, task: cells[2].querySelector('select').value, goal: +cells[3].querySelector('input').value || 0, actual: +cells[4].querySelector('input').value || 0, range: cells[6].querySelector('input').value || undefined, notes: cells[7].querySelector('input').value || undefined });
+    save(); renderAll();
+  });
+  tr.querySelector('[data-act=cancel]').addEventListener('click', renderAll);
+});
+
+// الإشعارات (محلية)
+btnAskNotif.addEventListener('click', ()=>{ if(!('Notification' in window)) return alert('المتصفح لا يدعم الإشعارات.'); Notification.requestPermission().then(p=> alert(p==='granted'?'تم السماح بالإشعارات.':'لم يُسمح.')); });
+btnTestNotif.addEventListener('click', ()=>{ if(Notification.permission!=='granted') return alert('اسمح بالإشعارات أولًا.'); new Notification('تذكير الحفظ', { body:'اختبار إشعار — جاهز للتسميع؟' }); });
+
+// التصدير/الاستيراد/ICS
+document.getElementById('btnExportJSON').addEventListener('click', ()=> download('quran-tracker.json', JSON.stringify(state,null,2), 'application/json'));
+document.getElementById('btnExportCSV').addEventListener('click', ()=>{
+  const header = ['id','date','period','task','goal','actual','range','notes'];
+  const esc = v => '"' + String(v??'').replaceAll('"','""') + '"';
+  const lines = [header.join(',')];
+  state.sessions.forEach(r=> lines.push([esc(r.id),esc(r.date),esc(r.period),esc(r.task),esc(r.goal),esc(r.actual),esc(r.range||''),esc(r.notes||'')].join(',')));
+  download('quran-sessions.csv', lines.join('\r\n'), 'text/csv');
+});
+document.getElementById('btnExportICS').addEventListener('click', ()=>{
+  const ics = buildICSReminders(30);
+  download('quran-reminders.ics', ics, 'text/calendar');
+});
+fileImport.addEventListener('change', e=>{
+  const f = e.target.files && e.target.files[0]; if(!f) return;
+  const reader=new FileReader();
+  reader.onload=()=>{ try{ const data=JSON.parse(String(reader.result)); if(data.settings) state.settings=data.settings; if(Array.isArray(data.sessions)) state.sessions=data.sessions; if(data.memorizedSurahs) state.memorizedSurahs = data.memorizedSurahs; if(typeof data.manualMem==='number') state.manualMem=data.manualMem; save(); renderAll(); alert('تم الاستيراد.'); }catch(e){ alert('تعذّر الاستيراد.'); } };
+  reader.readAsText(f);
+  e.target.value='';
+});
+btnReset.addEventListener('click', ()=>{ if(!confirm('سيتم مسح جميع البيانات من هذا المتصفح. متابعة؟')) return; state.sessions=[]; state.settings={ totalPages:604, times:{prev:'05:30', sabqi:'16:30', manzil:'20:30'}, lead:10 }; state.memorizedSurahs=[]; state.manualMem=0; save(); renderAll(); });
+
+// السور المحفوظة + الخطة السنوية
+surahSelect.addEventListener('change', ()=>{
+  state.memorizedSurahs = [...surahSelect.options].filter(o=> o.selected).map(o=> +o.value);
+  save(); recalcPlan();
+});
+manualMem.addEventListener('input', ()=>{ state.manualMem = +manualMem.value||0; save(); recalcPlan(); });
+btnRecalc.addEventListener('click', recalcPlan);
+
+function estimatedPagesFromSurahs(idxList){
+  const ayahs = idxList.reduce((sum, idx)=> sum + (SURAHS[idx][1]||0), 0);
+  return Math.round(ayahs / AYAHS_PER_PAGE);
+}
+function daysBetween(d1, d2){ return Math.max(1, Math.ceil((new Date(d2) - new Date(d1)) / 86400000)); }
+function recalcPlan(){
+  const totals = computeTotals();
+  const memEst = estimatedPagesFromSurahs(state.memorizedSurahs) + (+state.manualMem||0);
+  const remaining = Math.max((+state.settings.totalPages||604) - totals.newDone - memEst, 0);
+  const days = daysBetween(planStart.value||todayISO(), planEnd.value||todayISO());
+  const perDay = Math.max(1, Math.ceil(remaining / days));
+  planPagesLeft.textContent = remaining;
+  planDaysLeft.textContent = days;
+  planPagesPerDay.textContent = perDay;
+  const months = Math.ceil(days/30);
+  let out=''; let rest = remaining;
+  for(let m=1;m<=months;m++){ const assign = Math.min(perDay*30, rest); out += `<div>الشهر ${m}: ${assign} صفحة تقريبًا</div>`; rest -= assign; if(rest<=0) break; }
+  planMonthly.innerHTML = out || '—';
+  renderKPIs();
+}
+
+// الرسم البياني (Canvas)
+function drawChart(){
+  const ctx = progressCanvas.getContext('2d');
+  const W = progressCanvas.width; const H = progressCanvas.height;
+  ctx.clearRect(0,0,W,H);
+  const last30 = getDaysArray(30).map(d=> ({ d, val: sumSabakOn(d) }));
+  const maxVal = Math.max(2, ...last30.map(x=> x.val));
+  ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 1;
+  for(let y=0; y<=4; y++){ const yy = 20 + (H-40)*y/4; ctx.beginPath(); ctx.moveTo(40, yy); ctx.lineTo(W-10, yy); ctx.stroke(); }
+  ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(40,10); ctx.lineTo(40,H-20); ctx.lineTo(W-10,H-20); ctx.stroke();
+  ctx.fillStyle = '#64748b'; ctx.font = '12px Tajawal, sans-serif'; ctx.fillText('صفحات/يوم', 44, 18);
+  const barW = (W-70)/last30.length;
+  ctx.fillStyle = '#14b8a6';
+  last30.forEach((x,i)=>{
+    const h = Math.round((x.val/maxVal)*(H-60));
+    const x1 = 40 + i*barW + 2;
+    const y1 = (H-20) - h;
+    ctx.fillRect(x1, y1, Math.max(2, barW-4), h);
+  });
+  const last = last30[last30.length-1]; ctx.fillStyle = '#0f172a'; ctx.fillText(`${last.val} صفحة اليوم`, W-160, 18);
+}
+function getDaysArray(n){
+  const out=[]; const d=new Date();
+  for(let i=n-1;i>=0;i--){ const dd = new Date(d.getFullYear(), d.getMonth(), d.getDate()-i); out.push(`${dd.getFullYear()}-${String(dd.getMonth()+1).padStart(2,'0')}-${String(dd.getDate()).padStart(2,'0')}`); }
+  return out;
+}
+function sumSabakOn(dateISO){
+  return state.sessions.filter(s=> s.task==='سَبَق' && s.date===dateISO).reduce((sum,s)=> sum + (+s.actual||0), 0);
+}
+
+// عبارات تحفيزية
+const QUOTES = [
+  ['"خيرُكم من تعلّم القرآنَ وعلّمه."', 'حديث صحيح (البخاري)'],
+  ['"اقرؤوا القرآن، فإنه يأتي يوم القيامة شفيعًا لأصحابه."', 'حديث صحيح (مسلم)'],
+  ['"إن الله يرفع بهذا الكتاب أقوامًا ويضع به آخرين."', 'حديث صحيح (مسلم)'],
+  ['قال ابن مسعود: "ينبغي لقارئ القرآن أن يُعرف بليله إذا الناس نائمون."', 'أثر'],
+  ['قال الشافعي: "حفظت القرآن وأنا ابن سبع سنين."', 'سير أعلام النبلاء']
+];
+let qi = 0;
+function renderQuote(){ const [t,s] = QUOTES[qi%QUOTES.length]; quoteText.textContent = t; quoteSource.textContent = '— ' + s; qi++; }
+btnNextQuote.addEventListener('click', renderQuote);
+
+// ICS (parse/import + find free slots + export)
+const icsInputEl = document.getElementById('icsInput');
+icsInputEl.addEventListener('change', e=>{
+  const f = e.target.files && e.target.files[0]; if(!f) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{ window._icsEvents = parseICS(String(reader.result)); alert('تم استيراد التقويم.'); };
+  reader.readAsText(f);
+});
+btnFindSlots.addEventListener('click', ()=>{
+  const events = (window._icsEvents||[]).filter(ev=> ev.start && ev.end);
+  if(!events.length) return alert('لم يتم العثور على أحداث. حمّل ملف ICS أولًا.');
+  const minMinutes = +minSlot.value || 25;
+  const grouped = groupBy(events, ev=> ev.start.toISOString().slice(0,10));
+  const days = Object.keys(grouped).sort();
+  const out = [];
+  days.forEach(d=>{
+    const dayEvents = grouped[d].sort((a,b)=> a.start - b.start);
+    const open = findFreeWindows(dayEvents, minMinutes);
+    if(open.length){
+      out.push(`<h4>اليوم ${d}</h4>`);
+      out.push('<ul>');
+      open.forEach(w=> out.push(`<li>${fmtTime(w.start)}–${fmtTime(w.end)} (${w.minutes} دقيقة) <button class="btn btn-ghost" data-slot="${w.start.toISOString()}|${w.end.toISOString()}">أضف جلسة</button></li>`));
+      out.push('</ul>');
+    }
+  });
+  const wrap = document.getElementById('slotsWrap');
+  wrap.innerHTML = out.join('') || '<div class="small">لا فراغات متاحة بحسب الحد الأدنى المحدد.</div>';
+  wrap.querySelectorAll('button[data-slot]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const [s,e] = btn.dataset.slot.split('|').map(x=> new Date(x));
+      const date = `${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,'0')}-${String(s.getDate()).padStart(2,'0')}`;
+      state.sessions.push({ id:makeId(), date, period:'مرن', task:'سَبَق', goal:2, actual:0, notes:`موعد مقترح: ${fmtTime(s)}–${fmtTime(e)}` });
+      save(); renderAll(); alert('تمت إضافة جلسة مقترحة لليوم المحدد.');
+    });
+  });
+});
+function groupBy(arr, keyfn){ return arr.reduce((acc,it)=>{ const k=keyfn(it); (acc[k]=acc[k]||[]).push(it); return acc; },{}); }
+function fmtTime(d){ return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
+function findFreeWindows(events, minMinutes){
+  if(!events.length) return [{ start: new Date(new Date().setHours(5,0,0,0)), end: new Date(new Date().setHours(23,0,0,0)), minutes: (18*60) }];
+  const day = new Date(events[0].start); day.setHours(0,0,0,0);
+  const startDay = new Date(day); startDay.setHours(5,0,0,0);
+  const endDay = new Date(day); endDay.setHours(23,0,0,0);
+  const windows = []; let cursor = startDay;
+  events.forEach(ev=>{
+    if(ev.end <= cursor) return;
+    if(ev.start > cursor){
+      const gap = (ev.start - cursor)/60000;
+      if(gap >= minMinutes) windows.push({ start: new Date(cursor), end: new Date(ev.start), minutes: Math.floor(gap) });
+    }
+    cursor = new Date(Math.max(cursor, ev.end));
+  });
+  if(endDay > cursor){
+    const gap = (endDay - cursor)/60000;
+    if(gap >= minMinutes) windows.push({ start: new Date(cursor), end: new Date(endDay), minutes: Math.floor(gap) });
+  }
+  return windows;
+}
+function parseICS(text){
+  text = text.replace(/\r?\n[ \t]/g, '');
+  const lines = text.split(/\r?\n/);
+  const events=[]; let cur=null;
+  lines.forEach(line=>{
+    if(line==='BEGIN:VEVENT'){ cur={}; }
+    else if(line==='END:VEVENT'){ if(cur) events.push(cur); cur=null; }
+    else if(cur){
+      if(line.startsWith('DTSTART')){ cur.start = parseICSTime(line.split(':')[1]); }
+      else if(line.startsWith('DTEND')){ cur.end = parseICSTime(line.split(':')[1]); }
+      else if(line.startsWith('SUMMARY')){ cur.summary = line.split(':').slice(1).join(':'); }
+    }
+  });
+  return events;
+}
+function parseICSTime(v){
+  if(!v) return null;
+  if(v.endsWith('Z')) return new Date(v);
+  const yyyy=v.slice(0,4), mm=v.slice(4,6), dd=v.slice(6,8), HH=v.slice(9,11), MM=v.slice(11,13), SS=v.slice(13,15);
+  return new Date(+yyyy, +mm-1, +dd, +HH, +MM, +SS||0);
+}
+function buildICSReminders(days){
+  function fmt(d){ const p=n=> String(n).padStart(2,'0'); return d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'T'+p(d.getHours())+p(d.getMinutes())+'00'; }
+  function uid(){ return makeId()+'@quran-tracker'; }
+  const times = state.settings.times; const lead = (+state.settings.lead||10);
+  const out = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Quran Tracker//AR//EN'];
+  for(let i=0;i<days;i++){
+    const base = new Date(); base.setDate(base.getDate()+i);
+    [['سَبَق',times.prev],['سَبقي',times.sabqi],['مَنزِل',times.manzil]].forEach(([name,t])=>{
+      if(!t) return;
+      const [H,M] = t.split(':').map(Number);
+      const s = new Date(base.getFullYear(), base.getMonth(), base.getDate(), H, M, 0);
+      const e = new Date(s.getTime()+30*60000);
+      out.push('BEGIN:VEVENT','UID:'+uid(),'DTSTART:'+fmt(s),'DTEND:'+fmt(e),'SUMMARY:تذكير الحفظ — '+name,'BEGIN:VALARM','TRIGGER:-PT'+lead+'M','ACTION:DISPLAY','DESCRIPTION:تذكير الحفظ','END:VALARM','END:VEVENT');
+    });
+  }
+  out.push('END:VCALENDAR'); return out.join('\r\n');
+}
+
+// حفظ/تحميل
+function loadAll(){ try{ const raw = localStorage.getItem(LS_KEY); if(raw){ const d=JSON.parse(raw); Object.assign(state, d); } }catch{} }
+function saveAll(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+
+// تهيئة
+function init(){ loadAll(); initSurahs(); syncInputs(); renderAll(); renderQuote(); }
+init();
+</script>
+</body>
+</html>
